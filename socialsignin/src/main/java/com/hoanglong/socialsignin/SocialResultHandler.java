@@ -1,5 +1,7 @@
 package com.hoanglong.socialsignin;
 
+import com.facebook.FacebookException;
+import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 /**
@@ -8,4 +10,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 public interface SocialResultHandler {
     void handleGoogleCallback(GoogleSignInAccount account);
+    void handleFacebookCallbackSuccess(LoginResult loginResult);
+    void handleFacebookCallbackError(FacebookException facebookException);
 }

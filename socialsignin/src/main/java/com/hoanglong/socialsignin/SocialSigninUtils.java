@@ -6,6 +6,11 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -31,21 +36,46 @@ public class SocialSigninUtils {
     private Activity activity;
     private GoogleSignInOptions googleSignInOptions;
     private GoogleApiClient googleApiClient;
+    private CallbackManager callbackManager;
+    private FacebookCallback<LoginResult> facebookCallback;
+    private LoginManager loginManager;
     private SocialResultHandler resultHandler;
 
 
     private SocialSigninUtils(Builder builder){
+        this.activity = builder.activity;
+        this.resultHandler = builder.resultHandler;
         if(builder instanceof GoogleBuilder){
             GoogleBuilder googleBuilder = (GoogleBuilder) builder;
-            this.activity = builder.activity;
             this.googleSignInOptions = googleBuilder.googleSignInOptions;
             this.googleApiClient = googleBuilder.googleApiClient;
-            this.resultHandler = googleBuilder.resultHandler;
             socialType = SocialType.GOOGLE;
+        }else if(builder instanceof FacebookBuilder){
+            FacebookBuilder facebookBuilder = (FacebookBuilder) builder;
+            this.callbackManager = facebookBuilder.callbackManager;
+            this.loginManager = facebookBuilder.loginManager;
+            this.facebookCallback = new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    SocialSigninUtils.this.resultHandler.handleFacebookCallbackSuccess(loginResult);
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+
+                @Override
+                public void onError(FacebookException error) {
+                    SocialSigninUtils.this.resultHandler.handleFacebookCallbackError(error);
+                }
+            };
+            this.loginManager.registerCallback(callbackManager, facebookCallback);
+            socialType = SocialType.FACEBOOK;
         }
     }
 
-    public void requestGoogleSignIn(){
+    public void requestSignIn(){
         if(!googleApiClient.isConnected()) {
             googleApiClient.connect();
             Intent googleSignInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
@@ -64,7 +94,7 @@ public class SocialSigninUtils {
         }
     }
 
-    public void resultCallback(int requestCode, Intent data){
+    public void resultCallback(int requestCode, int resultcode, Intent data){
         try {
             if (data != null) {
                 if (requestCode == GOOGLE_SIGN_IN) {
@@ -73,16 +103,10 @@ public class SocialSigninUtils {
                         resultHandler.handleGoogleCallback(result.getSignInAccount());
                     }
                 }
+                callbackManager.onActivityResult(requestCode, resultcode, data);
             }
         }catch(NullPointerException npex){
             Log.d("NULL EXCEPTION", npex.toString());
-        }
-    }
-
-    public static class FacebookBuilder extends Builder{
-
-        public FacebookBuilder(Activity activity, SocialResultHandler resultHandler) {
-            super(activity, resultHandler);
         }
     }
 
@@ -115,6 +139,37 @@ public class SocialSigninUtils {
                 googleApiClient = new GoogleApiClient.Builder(activity)
                         .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
                         .build();
+            }
+
+            return new SocialSigninUtils(this);
+        }
+    }
+
+    public static class FacebookBuilder extends Builder{
+
+        private CallbackManager callbackManager;
+        private LoginManager loginManager;
+
+        public FacebookBuilder(Activity activity, SocialResultHandler resultHandler) {
+            super(activity, resultHandler);
+        }
+
+        public void setCallbackManager(CallbackManager callbackManager){
+            this.callbackManager = callbackManager;
+        }
+
+        public void setLoginManager(LoginManager loginManager){
+            this.loginManager = loginManager;
+        }
+
+        public SocialSigninUtils build(){
+
+            if(callbackManager == null){
+                callbackManager = CallbackManager.Factory.create();
+            }
+
+            if(loginManager == null){
+                loginManager = LoginManager.getInstance();
             }
 
             return new SocialSigninUtils(this);

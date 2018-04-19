@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements SocialResultHandl
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        socialUtils.resultCallback(requestCode, data);
+        socialUtils.resultCallback(requestCode, resultCode, data);
     }
 
     @Override
