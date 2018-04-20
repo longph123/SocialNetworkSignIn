@@ -22,6 +22,8 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.Task;
 
+import java.util.List;
+
 /**
  * Owner by phamhoanglong.
  */
@@ -75,7 +77,15 @@ public class SocialSigninUtils {
         }
     }
 
-    public void requestSignIn(){
+    public void requestSignIn(List<String> requestInfos){
+        if(socialType == SocialType.GOOGLE){
+            requestGoogleSignIn();
+        }else if(socialType == SocialType.FACEBOOK){
+            requestFacebookSignIn(requestInfos);
+        }
+    }
+
+    private void requestGoogleSignIn(){
         if(!googleApiClient.isConnected()) {
             googleApiClient.connect();
             Intent googleSignInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
@@ -92,6 +102,10 @@ public class SocialSigninUtils {
                 });
             }
         }
+    }
+
+    private void requestFacebookSignIn(List<String> requestInfos){
+        LoginManager.getInstance().logInWithReadPermissions(activity, requestInfos);
     }
 
     public void resultCallback(int requestCode, int resultcode, Intent data){

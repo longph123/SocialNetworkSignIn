@@ -9,13 +9,16 @@
     tools:context="com.hoanglong.socialnetworksignin.MainActivity">
 
     <Button
+        android:id="@+id/activity_main_btn_sign_in_google"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sign In Google"
         android:padding="10dp"
         android:onClick="onClicked"/>
 
+
     <Button
+        android:id="@+id/activity_main_btn_sign_in_facebook"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sign In Facebook"
